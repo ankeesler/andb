@@ -1,0 +1,25 @@
+syntax = "proto3";
+package server;
+
+message SetRequest {
+  string key = 1;
+  string value = 2;
+}
+
+message SetResponse {
+  string status = 1;
+}
+
+message GetRequest {
+  string key = 1;
+}
+
+message GetResponse {
+  string status = 1;
+  string value = 2;
+}
+
+service ANDB {
+  rpc Get(GetRequest) returns (GetResponse) { }
+  rpc Set(SetRequest) returns (SetResponse) { }
+}
