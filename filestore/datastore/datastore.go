@@ -79,7 +79,3 @@ func (d *Datastore) ReadData(offset, length uint32) (string, error) {
 
 	return string(data), nil
 }
-
-func (d *Datastore) Print(w io.Writer) error {
-	return nil
-}

@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ankeesler/andb/filestore/datastore"
 	"github.com/ankeesler/andb/filestore/metastore"
 )
 
@@ -22,14 +21,19 @@ func main() {
 	printFile(
 		filepath.Join(storedir, "andbmeta.bin"),
 		func(file *os.File) error {
-			return metastore.New(file).Print(os.Stdout)
+			return metastore.New(file).ForEachBlock(
+				func(b metastore.Block) error {
+					fmt.Printf("%+v\n", b)
+					return nil
+				},
+			)
 		},
 	)
 
 	printFile(
 		filepath.Join(storedir, "andbdata.bin"),
 		func(file *os.File) error {
-			return datastore.New(file).Print(os.Stdout)
+			return nil
 		},
 	)
 }

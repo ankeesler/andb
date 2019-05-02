@@ -2,7 +2,6 @@ package metastore
 
 import (
 	"encoding/binary"
-	"fmt"
 	"hash/crc32"
 	"io"
 	"os"
@@ -81,13 +80,4 @@ func (m *Metastore) ForEachBlock(blockHandler func(b Block) error) error {
 	}
 
 	return nil
-}
-
-func (m *Metastore) Print(w io.Writer) error {
-	return m.ForEachBlock(
-		func(b Block) error {
-			fmt.Fprintf(w, "%+v\n", b)
-			return nil
-		},
-	)
 }
