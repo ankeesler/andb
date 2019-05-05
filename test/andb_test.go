@@ -237,6 +237,10 @@ var _ = Describe("ANDB", func() {
 					key := fmt.Sprintf("key-%d", i)
 					value := fmt.Sprintf("value-%d", i)
 					set(key, value)
+
+					if i%100 == 0 {
+						fmt.Printf("set %d values\n", i)
+					}
 				}
 			})
 			Expect(writing).To(BeNumerically("<", time.Duration(1*time.Second)))
@@ -248,6 +252,10 @@ var _ = Describe("ANDB", func() {
 					key := fmt.Sprintf("key-%d", i)
 					value := fmt.Sprintf("value-%d", i)
 					set(key, value)
+
+					if i%100 == 0 {
+						fmt.Printf("set %d values\n", i)
+					}
 				}
 			})
 			Expect(writing).To(BeNumerically("<", time.Duration(1*time.Second)))
@@ -259,9 +267,33 @@ var _ = Describe("ANDB", func() {
 					key := fmt.Sprintf("key-%d", i)
 					value := fmt.Sprintf("value-%d", i)
 					set(key, value)
+
+					if i%100 == 0 {
+						fmt.Printf("set %d values\n", i)
+					}
 				}
 			})
 			Expect(writing).To(BeNumerically("<", time.Duration(1*time.Second)))
+		}, 5)
+
+		Measure("sequential deletes", func(b Benchmarker) {
+			for i := 0; i < 1000; i++ {
+				key := fmt.Sprintf("key-%d", i)
+				value := fmt.Sprintf("value-%d", i)
+				set(key, value)
+
+				if i%100 == 0 {
+					fmt.Printf("set %d values\n", i)
+				}
+			}
+
+			deleting := b.Time("deleting", func() {
+				for i := 0; i < 1000; i++ {
+					key := fmt.Sprintf("key-%d", i)
+					delete(key)
+				}
+			})
+			Expect(deleting).To(BeNumerically("<", time.Duration(1*time.Second)))
 		}, 5)
 	})
 })

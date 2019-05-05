@@ -103,28 +103,15 @@ func (f *Filestore) Delete(key string) error {
 	log.Printf("begin delete %s", key)
 	defer log.Printf("end delete %s", key)
 
-	//f.workC <- &work{
-	//	description: fmt.Sprintf("set %s => %s", key, value),
-	//	action: func() error {
-	//		var err error
-	//		f.data.WriteKeyValue(
-	//			key,
-	//			value,
-	//			func(key, value string, keyOffset, valueOffset uint32) {
-	//				if err0 := f.meta.Write(key, value, keyOffset, valueOffset); err0 != nil {
-	//					err = errors.Wrap(err0, "write metadata")
-	//				}
-	//			},
-	//			func(err0 error) {
-	//				err = errors.Wrap(err0, "write key/value data")
-	//			},
-	//		)
-	//		return err
-	//	},
-	//}
+	f.workC <- &work{
+		description: fmt.Sprintf("delete %s", key),
+		action: func() error {
+			if err := f.meta.DeleteBlock(key); err != nil {
+				return errors.Wrap(err, "delete meta block")
+			}
 
-	if err := f.meta.DeleteBlock(key); err != nil {
-		return errors.Wrap(err, "delete meta block")
+			return nil
+		},
 	}
 
 	if err := f.cache.Delete(key); err != nil {
