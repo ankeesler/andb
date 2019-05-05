@@ -11,6 +11,7 @@ type Store interface {
 	Get(string) (string, error)
 	Set(string, string) error
 	Delete(string) error
+	Sync() error
 }
 
 type server struct {
@@ -47,6 +48,7 @@ func (s *server) Set(ctx context.Context, r *SetRequest) (*SetResponse, error) {
 	} else {
 		status = "ok"
 	}
+
 	return &SetResponse{Status: status}, nil
 }
 
@@ -59,5 +61,19 @@ func (s *server) Delete(ctx context.Context, r *DeleteRequest) (*DeleteResponse,
 	} else {
 		status = "ok"
 	}
+
 	return &DeleteResponse{Status: status}, nil
+}
+
+func (s *server) Sync(ctx context.Context, r *SyncRequest) (*SyncResponse, error) {
+	log.Printf("sync")
+
+	var status string
+	if err := s.store.Sync(); err != nil {
+		status = err.Error()
+	} else {
+		status = "ok"
+	}
+
+	return &SyncResponse{Status: status}, nil
 }

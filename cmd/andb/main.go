@@ -36,6 +36,8 @@ func main() {
 		cmd = set
 	case "delete":
 		cmd = delete
+	case "sync":
+		cmd = sync
 	}
 
 	if cmd == nil {
@@ -117,6 +119,29 @@ func delete(client server.ANDBClient) error {
 	req := server.DeleteRequest{Key: flag.Arg(1)}
 
 	rsp, err := client.Delete(ctx, &req)
+	if err != nil {
+		return err
+	}
+
+	if rsp.Status != "ok" {
+		return errors.New(rsp.Status)
+	}
+
+	return nil
+}
+
+func sync(client server.ANDBClient) error {
+	if flag.NArg() != 1 {
+		fmt.Println("usage: sync")
+		os.Exit(1)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+
+	req := server.SyncRequest{}
+
+	rsp, err := client.Sync(ctx, &req)
 	if err != nil {
 		return err
 	}

@@ -5,7 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"sync"
+	syncpkg "sync"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -189,7 +190,7 @@ var _ = Describe("ANDB", func() {
 	})
 
 	It("handles concurrency gracefully", func() {
-		wg := sync.WaitGroup{}
+		wg := syncpkg.WaitGroup{}
 		for i := 0; i < 16; i++ {
 			wg.Add(1)
 			go func(i int) {
@@ -203,6 +204,7 @@ var _ = Describe("ANDB", func() {
 		}
 		wg.Wait()
 
+		sync()
 		rebootServer(storeDir)
 
 		for i := 0; i < 16; i++ {
@@ -226,5 +228,40 @@ var _ = Describe("ANDB", func() {
 	})
 
 	XIt("defragments the data storage file over time", func() {
+	})
+
+	XContext("performance", func() {
+		Measure("appending writes", func(b Benchmarker) {
+			writing := b.Time("writing", func() {
+				for i := 0; i < 1000; i++ {
+					key := fmt.Sprintf("key-%d", i)
+					value := fmt.Sprintf("value-%d", i)
+					set(key, value)
+				}
+			})
+			Expect(writing).To(BeNumerically("<", time.Duration(1*time.Second)))
+		}, 5)
+
+		Measure("random, non-overlapping writes", func(b Benchmarker) {
+			writing := b.Time("writing", func() {
+				for i := 0; i < 1000; i++ {
+					key := fmt.Sprintf("key-%d", i)
+					value := fmt.Sprintf("value-%d", i)
+					set(key, value)
+				}
+			})
+			Expect(writing).To(BeNumerically("<", time.Duration(1*time.Second)))
+		}, 5)
+
+		Measure("random, overlapping writes", func(b Benchmarker) {
+			writing := b.Time("writing", func() {
+				for i := 0; i < 1000; i++ {
+					key := fmt.Sprintf("key-%d", i)
+					value := fmt.Sprintf("value-%d", i)
+					set(key, value)
+				}
+			})
+			Expect(writing).To(BeNumerically("<", time.Duration(1*time.Second)))
+		}, 5)
 	})
 })

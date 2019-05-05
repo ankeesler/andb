@@ -99,6 +99,11 @@ func delete(key string) {
 	ExpectWithOffset(1, err).NotTo(HaveOccurred(), string(output))
 }
 
+func sync() {
+	output, err := exec.Command(andbClient, "sync").CombinedOutput()
+	ExpectWithOffset(1, err).NotTo(HaveOccurred(), string(output))
+}
+
 func printStore(storeDir string) {
 	output, err := exec.Command(andbStoreReader, storeDir).CombinedOutput()
 	ExpectWithOffset(1, err).NotTo(HaveOccurred(), string(output))

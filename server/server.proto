@@ -27,8 +27,16 @@ message DeleteResponse {
   string status = 1;
 }
 
+message SyncRequest {
+}
+
+message SyncResponse {
+  string status = 1;
+}
+
 service ANDB {
   rpc Get(GetRequest) returns (GetResponse) { }
   rpc Set(SetRequest) returns (SetResponse) { }
   rpc Delete(DeleteRequest) returns (DeleteResponse) { }
+  rpc Sync(SyncRequest) returns (SyncResponse) { }
 }

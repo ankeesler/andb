@@ -5,6 +5,7 @@ import (
 	"hash/crc32"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/ankeesler/andb/filestore/datastore"
 	"github.com/ankeesler/andb/filestore/metastore"
@@ -14,13 +15,13 @@ import (
 
 type Filestore struct {
 	cache memstore.Memstore
-
-	data *datastore.Datastore
-	meta *metastore.Metastore
-
+	data  *datastore.Datastore
+	meta  *metastore.Metastore
 	mutex *sync.Mutex
 	// TODO: this shouldn't be global
 	// esp when there is locking below
+
+	workC chan *work
 }
 
 func New(
@@ -28,12 +29,17 @@ func New(
 	data *datastore.Datastore,
 	meta *metastore.Metastore,
 ) *Filestore {
-	return &Filestore{
+	f := &Filestore{
 		cache: cache,
 		data:  data,
 		meta:  meta,
 		mutex: &sync.Mutex{},
 	}
+
+	f.workC = make(chan *work)
+	newWorker(f.workC).start()
+
+	return f
 }
 
 func (f *Filestore) Get(key string) (string, error) {
@@ -65,17 +71,23 @@ func (f *Filestore) Set(key, value string) error {
 	log.Printf("begin set %s => %s", key, value)
 	defer log.Printf("end set %s => %s", key, value)
 
-	var err error
-	f.data.WriteKeyValue(
-		key,
-		value,
-		func(key, value string, keyOffset, valueOffset uint32) {
-			err = f.meta.Write(key, value, keyOffset, valueOffset)
+	f.workC <- &work{
+		description: fmt.Sprintf("set %s => %s", key, value),
+		action: func() error {
+			var err error
+			f.data.WriteKeyValue(
+				key,
+				value,
+				func(key, value string, keyOffset, valueOffset uint32) {
+					err = f.meta.Write(key, value, keyOffset, valueOffset)
+				},
+				func(err0 error) {
+					err = errors.Wrap(err0, "write key/value data")
+				},
+			)
+			return err
 		},
-		func(err0 error) {
-			err = errors.Wrap(err0, "write key/value data")
-		},
-	)
+	}
 
 	if err := f.cache.Set(key, value); err != nil {
 		return errors.Wrap(err, "cache set")
@@ -91,6 +103,26 @@ func (f *Filestore) Delete(key string) error {
 	log.Printf("begin delete %s", key)
 	defer log.Printf("end delete %s", key)
 
+	//f.workC <- &work{
+	//	description: fmt.Sprintf("set %s => %s", key, value),
+	//	action: func() error {
+	//		var err error
+	//		f.data.WriteKeyValue(
+	//			key,
+	//			value,
+	//			func(key, value string, keyOffset, valueOffset uint32) {
+	//				if err0 := f.meta.Write(key, value, keyOffset, valueOffset); err0 != nil {
+	//					err = errors.Wrap(err0, "write metadata")
+	//				}
+	//			},
+	//			func(err0 error) {
+	//				err = errors.Wrap(err0, "write key/value data")
+	//			},
+	//		)
+	//		return err
+	//	},
+	//}
+
 	if err := f.meta.DeleteBlock(key); err != nil {
 		return errors.Wrap(err, "delete meta block")
 	}
@@ -99,6 +131,17 @@ func (f *Filestore) Delete(key string) error {
 		return errors.Wrap(err, "cache delete")
 	}
 
+	return nil
+}
+
+func (f *Filestore) Sync() error {
+	for {
+		if len(f.workC) == 0 {
+			break
+		} else {
+			time.Sleep(time.Second * 3)
+		}
+	}
 	return nil
 }
 
