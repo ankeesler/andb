@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"hash/crc32"
-	"log"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type Block struct {
@@ -24,7 +24,7 @@ func (b Block) CalculateCRC32() (uint32, error) {
 	// TODO: this needs to be faster!
 	b.CRC32 = 0
 
-	log.Printf("calc crc32 of %+v", b)
+	log.Tracef("calc crc32 of %+v", b)
 
 	buf := bytes.NewBuffer([]byte{})
 	if err := binary.Write(buf, blockByteOrder, &b); err != nil {

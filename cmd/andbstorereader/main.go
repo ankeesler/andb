@@ -4,11 +4,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/ankeesler/andb/filestore/metastore"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {

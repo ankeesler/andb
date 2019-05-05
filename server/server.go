@@ -2,7 +2,8 @@ package server
 
 import (
 	"context"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 )
 
 //go:generate protoc --go_out=plugins=grpc:. server.proto
@@ -25,7 +26,7 @@ func New(store Store) ANDBServer {
 }
 
 func (s *server) Get(ctx context.Context, r *GetRequest) (*GetResponse, error) {
-	log.Printf("get %s", r.Key)
+	log.Debugf("get %s", r.Key)
 
 	value, err := s.store.Get(r.Key)
 
@@ -40,7 +41,7 @@ func (s *server) Get(ctx context.Context, r *GetRequest) (*GetResponse, error) {
 }
 
 func (s *server) Set(ctx context.Context, r *SetRequest) (*SetResponse, error) {
-	log.Printf("set %s => %s", r.Key, r.Value)
+	log.Debugf("set %s => %s", r.Key, r.Value)
 
 	var status string
 	if err := s.store.Set(r.Key, r.Value); err != nil {
@@ -53,7 +54,7 @@ func (s *server) Set(ctx context.Context, r *SetRequest) (*SetResponse, error) {
 }
 
 func (s *server) Delete(ctx context.Context, r *DeleteRequest) (*DeleteResponse, error) {
-	log.Printf("delete %s", r.Key)
+	log.Debugf("delete %s", r.Key)
 
 	var status string
 	if err := s.store.Delete(r.Key); err != nil {
@@ -66,7 +67,7 @@ func (s *server) Delete(ctx context.Context, r *DeleteRequest) (*DeleteResponse,
 }
 
 func (s *server) Sync(ctx context.Context, r *SyncRequest) (*SyncResponse, error) {
-	log.Printf("sync")
+	log.Debugf("sync")
 
 	var status string
 	if err := s.store.Sync(); err != nil {

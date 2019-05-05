@@ -2,11 +2,11 @@ package datastore
 
 import (
 	"io"
-	"log"
 	"os"
 	"sync"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type Datastore struct {
@@ -29,8 +29,8 @@ func (d *Datastore) WriteKeyValue(
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
-	log.Printf("begin write key/value data: %s => %s", key, value)
-	defer log.Printf("end write key/value data: %s => %s", key, value)
+	log.Debugf("begin write key/value data: %s => %s", key, value)
+	defer log.Debugf("end write key/value data: %s => %s", key, value)
 
 	_, err := d.file.Seek(0, 2)
 	if err != nil {

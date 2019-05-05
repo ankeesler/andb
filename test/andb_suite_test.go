@@ -41,19 +41,32 @@ var _ = AfterSuite(func() {
 
 func startServer(storeDir string) {
 	var err error
-	cmd := exec.Command(andbServer, "-storedir", storeDir)
+	cmd := exec.Command(
+		andbServer,
+		"-storedir",
+		storeDir,
+		"-port",
+		"9000",
+		"-loglevel",
+		"trace",
+	)
 	andbServerSession, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 
 	healthy := false
 	for i := 0; i < 3; i++ {
 		time.Sleep(time.Millisecond * 50)
-		_, err := setWithError("healthcheck", "green")
+		output, err := setWithError("healthcheck", "green")
 		if err == nil {
 			healthy = true
 			break
 		} else {
-			fmt.Fprintf(GinkgoWriter, "waiting for andbserver to be healthy (error: %s)\n", err.Error())
+			fmt.Fprintf(
+				GinkgoWriter,
+				"waiting for andbserver to be healthy: %s (%s)\n",
+				err.Error(),
+				strings.TrimSpace(string(output)),
+			)
 		}
 	}
 	Expect(healthy).To(BeTrue(), "andbserver did not come up within 3 healthchecks!")
@@ -69,7 +82,7 @@ func rebootServer(storeDir string) {
 }
 
 func getWithError(key string) (string, error) {
-	output, err := exec.Command(andbClient, "get", key).CombinedOutput()
+	output, err := exec.Command(andbClient, "-address", ":9000", "get", key).CombinedOutput()
 	return strings.TrimSpace(string(output)), err
 }
 
@@ -80,7 +93,7 @@ func get(key string) string {
 }
 
 func setWithError(key, value string) (string, error) {
-	output, err := exec.Command(andbClient, "set", key, value).CombinedOutput()
+	output, err := exec.Command(andbClient, "-address", ":9000", "set", key, value).CombinedOutput()
 	return string(output), err
 }
 
@@ -90,7 +103,7 @@ func set(key, value string) {
 }
 
 func deleteWithError(key string) (string, error) {
-	output, err := exec.Command(andbClient, "delete", key).CombinedOutput()
+	output, err := exec.Command(andbClient, "-address", ":9000", "delete", key).CombinedOutput()
 	return string(output), err
 }
 
@@ -100,7 +113,7 @@ func delete(key string) {
 }
 
 func sync() {
-	output, err := exec.Command(andbClient, "sync").CombinedOutput()
+	output, err := exec.Command(andbClient, "-address", ":9000", "sync").CombinedOutput()
 	ExpectWithOffset(1, err).NotTo(HaveOccurred(), string(output))
 }
 

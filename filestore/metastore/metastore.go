@@ -5,11 +5,11 @@ import (
 	"hash/crc32"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"sync"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type Metastore struct {
@@ -81,7 +81,7 @@ func (m *Metastore) ForEachBlock(blockHandler func(b Block) error) error {
 			}
 		}
 
-		log.Printf("handle block %d (%x)", i, b.KeyCRC32)
+		log.Tracef("handle block %d (%x)", i, b.KeyCRC32)
 		i++
 
 		if blockHandler != nil {
@@ -108,7 +108,7 @@ func (m *Metastore) DeleteBlock(key string) error {
 					return errors.Wrap(err, "write block")
 				}
 			} else {
-				log.Printf("dropping block %x", b.KeyCRC32)
+				log.Tracef("dropping block %x", b.KeyCRC32)
 			}
 			return nil
 		},

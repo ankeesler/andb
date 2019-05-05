@@ -1,7 +1,7 @@
 package filestore
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 const MaxWorkAttempts = 3
@@ -33,15 +33,15 @@ func newWorker(workC chan *work) *worker {
 
 func (w *worker) start() {
 	go func() {
-		log.Printf("worker starting")
+		log.Debugf("worker starting")
 		for work := range w.workC {
 			if err := work.action(); err != nil {
-				log.Printf("work failed (%s): %s", work.description, err.Error())
+				log.Warnf("work failed (%s): %s", work.description, err.Error())
 				work.attempts++
 				if work.attempts < MaxWorkAttempts {
 					w.workC <- work
 				} else {
-					log.Printf("work hit max attempts (%s)", work.description)
+					log.Warnf("work hit max attempts (%s)", work.description)
 				}
 			}
 		}

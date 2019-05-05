@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	address := flag.String("address", "127.0.0.1:8080", "Address at which the server is running")
+	address := flag.String("address", ":8080", "Address at which the server is running")
 	help := flag.Bool("help", false, "Print out the help text")
 
 	flag.Parse()

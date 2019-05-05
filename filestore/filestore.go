@@ -3,7 +3,6 @@ package filestore
 import (
 	"fmt"
 	"hash/crc32"
-	"log"
 	"sync"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/ankeesler/andb/filestore/metastore"
 	"github.com/ankeesler/andb/memstore"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type Filestore struct {
@@ -46,8 +46,8 @@ func (f *Filestore) Get(key string) (string, error) {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
-	log.Printf("begin get %s", key)
-	defer log.Printf("end get %s", key)
+	log.Debugf("begin get %s", key)
+	defer log.Debugf("end get %s", key)
 
 	if value, err := f.cache.Get(key); err == nil {
 		return value, nil
@@ -68,8 +68,8 @@ func (f *Filestore) Set(key, value string) error {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
-	log.Printf("begin set %s => %s", key, value)
-	defer log.Printf("end set %s => %s", key, value)
+	log.Debugf("begin set %s => %s", key, value)
+	defer log.Debugf("end set %s => %s", key, value)
 
 	f.workC <- &work{
 		description: fmt.Sprintf("set %s => %s", key, value),
@@ -100,8 +100,8 @@ func (f *Filestore) Delete(key string) error {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
-	log.Printf("begin delete %s", key)
-	defer log.Printf("end delete %s", key)
+	log.Debugf("begin delete %s", key)
+	defer log.Debugf("end delete %s", key)
 
 	f.workC <- &work{
 		description: fmt.Sprintf("delete %s", key),
@@ -133,7 +133,7 @@ func (f *Filestore) Sync() error {
 }
 
 func (f *Filestore) loadStore() error {
-	log.Printf("loading store")
+	log.Tracef("loading store")
 	if err := f.meta.ForEachBlock(func(b metastore.Block) error {
 		expectedBlockCRC32, err := b.CalculateCRC32()
 		if err != nil {
@@ -176,7 +176,7 @@ func (f *Filestore) loadStore() error {
 			)
 		}
 
-		log.Printf("loading %s => %s", key, value)
+		log.Tracef("loading %s => %s", key, value)
 		if err := f.cache.Set(key, value); err != nil {
 			return errors.Wrap(err, "cache set")
 		}
