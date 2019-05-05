@@ -27,34 +27,72 @@ var _ = Describe("ANDB", func() {
 		Expect(os.RemoveAll(storeDir)).To(Succeed())
 	})
 
-	It("stores stuff", func() {
-		for i := 0; i < 100; i++ {
+	It("stores and deletes stuff", func() {
+		for i := 0; i < 10; i++ {
 			key := fmt.Sprintf("key-%d", i)
 			value := fmt.Sprintf("value-%d", i)
 			set(key, value)
 		}
 
-		for i := 0; i < 100; i++ {
+		for i := 0; i < 10; i++ {
 			key := fmt.Sprintf("key-%d", i)
 			value := fmt.Sprintf("value-%d", i)
 			Expect(get(key)).To(Equal(value))
 		}
 
-		// TODO: deletes
+		for i := 3; i < 7; i++ {
+			key := fmt.Sprintf("key-%d", i)
+			delete(key)
+		}
+
+		for i := 0; i < 3; i++ {
+			key := fmt.Sprintf("key-%d", i)
+			value := fmt.Sprintf("value-%d", i)
+			Expect(get(key)).To(Equal(value))
+		}
+
+		for i := 3; i < 7; i++ {
+			key := fmt.Sprintf("key-%d", i)
+			output, err := getWithError(key)
+			Expect(err).To(HaveOccurred())
+			Expect(output).To(Equal("error: not found"))
+		}
+
+		for i := 7; i < 10; i++ {
+			key := fmt.Sprintf("key-%d", i)
+			value := fmt.Sprintf("value-%d", i)
+			Expect(get(key)).To(Equal(value))
+		}
 	})
 
 	It("stores stuff across reboots", func() {
-		for i := 0; i < 100; i++ {
+		for i := 0; i < 10; i++ {
 			key := fmt.Sprintf("key-%d", i)
 			value := fmt.Sprintf("value-%d", i)
 			set(key, value)
 		}
 
-		// TODO: deletes
+		for i := 3; i < 7; i++ {
+			key := fmt.Sprintf("key-%d", i)
+			delete(key)
+		}
 
 		rebootServer(storeDir)
 
-		for i := 0; i < 100; i++ {
+		for i := 0; i < 3; i++ {
+			key := fmt.Sprintf("key-%d", i)
+			value := fmt.Sprintf("value-%d", i)
+			Expect(get(key)).To(Equal(value))
+		}
+
+		for i := 3; i < 7; i++ {
+			key := fmt.Sprintf("key-%d", i)
+			output, err := getWithError(key)
+			Expect(err).To(HaveOccurred())
+			Expect(output).To(Equal("error: not found"))
+		}
+
+		for i := 7; i < 10; i++ {
 			key := fmt.Sprintf("key-%d", i)
 			value := fmt.Sprintf("value-%d", i)
 			Expect(get(key)).To(Equal(value))
@@ -105,6 +143,8 @@ var _ = Describe("ANDB", func() {
 		AfterEach(func() {
 			Expect(ioutil.WriteFile(filepath.Join(storeDir, "andbmeta.bin"), metaBytes, 0600)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(storeDir, "andbdata.bin"), dataBytes, 0600)).To(Succeed())
+
+			rebootServer(storeDir)
 
 			output, err := getWithError("key-0")
 			Expect(err).To(HaveOccurred())

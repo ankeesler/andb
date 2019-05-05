@@ -10,6 +10,7 @@ import (
 type Store interface {
 	Get(string) (string, error)
 	Set(string, string) error
+	Delete(string) error
 }
 
 type server struct {
@@ -47,4 +48,16 @@ func (s *server) Set(ctx context.Context, r *SetRequest) (*SetResponse, error) {
 		status = "ok"
 	}
 	return &SetResponse{Status: status}, nil
+}
+
+func (s *server) Delete(ctx context.Context, r *DeleteRequest) (*DeleteResponse, error) {
+	log.Printf("delete %s", r.Key)
+
+	var status string
+	if err := s.store.Delete(r.Key); err != nil {
+		status = err.Error()
+	} else {
+		status = "ok"
+	}
+	return &DeleteResponse{Status: status}, nil
 }

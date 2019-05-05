@@ -21,3 +21,8 @@ func (m Memstore) Set(key, value string) error {
 	m[key] = value
 	return nil
 }
+
+func (m Memstore) Delete(key string) error {
+	delete(m, key)
+	return nil
+}

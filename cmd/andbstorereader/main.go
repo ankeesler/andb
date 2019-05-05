@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -18,6 +19,7 @@ func main() {
 
 	storedir := os.Args[1]
 
+	log.SetOutput(ioutil.Discard)
 	printFile(
 		filepath.Join(storedir, "andbmeta.bin"),
 		func(file *os.File) error {

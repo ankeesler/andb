@@ -89,6 +89,16 @@ func set(key, value string) {
 	ExpectWithOffset(1, err).NotTo(HaveOccurred(), output)
 }
 
+func deleteWithError(key string) (string, error) {
+	output, err := exec.Command(andbClient, "delete", key).CombinedOutput()
+	return string(output), err
+}
+
+func delete(key string) {
+	output, err := deleteWithError(key)
+	ExpectWithOffset(1, err).NotTo(HaveOccurred(), string(output))
+}
+
 func printStore(storeDir string) {
 	output, err := exec.Command(andbStoreReader, storeDir).CombinedOutput()
 	ExpectWithOffset(1, err).NotTo(HaveOccurred(), string(output))

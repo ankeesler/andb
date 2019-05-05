@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"hash/crc32"
 	"io"
+	"io/ioutil"
+	"log"
 	"os"
 	"sync"
 
@@ -28,6 +30,11 @@ func (m *Metastore) Write(
 ) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
+
+	_, err := m.file.Seek(0, 2)
+	if err != nil {
+		return errors.Wrap(err, "seek to end")
+	}
 
 	b := Block{
 		Version: BlockVersion,
@@ -57,14 +64,16 @@ func (m *Metastore) ForEachBlock(blockHandler func(b Block) error) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	_, err := m.file.Seek(0, 0)
+	cursorFile, err := os.Open(m.file.Name())
 	if err != nil {
-		return errors.Wrap(err, "seek to beginning")
+		return errors.Wrap(err, "open cursor file")
 	}
+	defer cursorFile.Close()
 
 	b := Block{}
+	i := 0
 	for {
-		if err := binary.Read(m.file, blockByteOrder, &b); err != nil {
+		if err := binary.Read(cursorFile, blockByteOrder, &b); err != nil {
 			if err == io.EOF {
 				break
 			} else {
@@ -72,11 +81,52 @@ func (m *Metastore) ForEachBlock(blockHandler func(b Block) error) error {
 			}
 		}
 
+		log.Printf("handle block %d (%x)", i, b.KeyCRC32)
+		i++
+
 		if blockHandler != nil {
 			if err := blockHandler(b); err != nil {
 				return errors.Wrap(err, "block handler")
 			}
 		}
+	}
+
+	return nil
+}
+
+func (m *Metastore) DeleteBlock(key string) error {
+	newFile, err := ioutil.TempFile("", "andbmetastore")
+	if err != nil {
+		return errors.Wrap(err, "temp file")
+	}
+	defer newFile.Close()
+
+	if err := m.ForEachBlock(
+		func(b Block) error {
+			if b.KeyCRC32 != crc32.ChecksumIEEE([]byte(key)) {
+				if err := binary.Write(newFile, blockByteOrder, &b); err != nil {
+					return errors.Wrap(err, "write block")
+				}
+			} else {
+				log.Printf("dropping block %x", b.KeyCRC32)
+			}
+			return nil
+		},
+	); err != nil {
+		return errors.Wrap(err, "for each block")
+	}
+
+	if err := os.Rename(newFile.Name(), m.file.Name()); err != nil {
+		return errors.Wrap(err, "rename")
+	}
+
+	if err := m.file.Close(); err != nil {
+		return errors.Wrap(err, "close")
+	}
+
+	m.file, err = os.Open(m.file.Name())
+	if err != nil {
+		return errors.Wrap(err, "(re)open file")
 	}
 
 	return nil

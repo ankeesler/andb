@@ -34,6 +34,8 @@ func main() {
 		cmd = get
 	case "set":
 		cmd = set
+	case "delete":
+		cmd = delete
 	}
 
 	if cmd == nil {
@@ -92,6 +94,29 @@ func set(client server.ANDBClient) error {
 	req := server.SetRequest{Key: flag.Arg(1), Value: flag.Arg(2)}
 
 	rsp, err := client.Set(ctx, &req)
+	if err != nil {
+		return err
+	}
+
+	if rsp.Status != "ok" {
+		return errors.New(rsp.Status)
+	}
+
+	return nil
+}
+
+func delete(client server.ANDBClient) error {
+	if flag.NArg() != 2 {
+		fmt.Println("usage: delete <key>")
+		os.Exit(1)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	defer cancel()
+
+	req := server.DeleteRequest{Key: flag.Arg(1)}
+
+	rsp, err := client.Delete(ctx, &req)
 	if err != nil {
 		return err
 	}

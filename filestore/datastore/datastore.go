@@ -32,6 +32,12 @@ func (d *Datastore) WriteKeyValue(
 	log.Printf("begin write key/value data: %s => %s", key, value)
 	defer log.Printf("end write key/value data: %s => %s", key, value)
 
+	_, err := d.file.Seek(0, 2)
+	if err != nil {
+		onError(errors.Wrap(err, "seek to end"))
+		return
+	}
+
 	keyOffset, err := d.file.Seek(0, 1)
 	if err != nil {
 		onError(errors.Wrap(err, "seek (key)"))

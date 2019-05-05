@@ -77,6 +77,28 @@ func (f *Filestore) Set(key, value string) error {
 		},
 	)
 
+	if err := f.cache.Set(key, value); err != nil {
+		return errors.Wrap(err, "cache set")
+	}
+
+	return nil
+}
+
+func (f *Filestore) Delete(key string) error {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	log.Printf("begin delete %s", key)
+	defer log.Printf("end delete %s", key)
+
+	if err := f.meta.DeleteBlock(key); err != nil {
+		return errors.Wrap(err, "delete meta block")
+	}
+
+	if err := f.cache.Delete(key); err != nil {
+		return errors.Wrap(err, "cache delete")
+	}
+
 	return nil
 }
 
@@ -124,6 +146,7 @@ func (f *Filestore) loadStore() error {
 			)
 		}
 
+		log.Printf("loading %s => %s", key, value)
 		if err := f.cache.Set(key, value); err != nil {
 			return errors.Wrap(err, "cache set")
 		}
