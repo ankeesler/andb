@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	syncpkg "sync"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -228,7 +229,7 @@ var _ = Describe("ANDB", func() {
 
 	Context("performance", func() {
 		Measure("appending writes", func(b Benchmarker) {
-			b.Time("writes", func() {
+			writes := b.Time("writes", func() {
 				for i := 0; i < 1000; i++ {
 					key := fmt.Sprintf("key-%d", i)
 					value := fmt.Sprintf("value-%d", i)
@@ -239,6 +240,21 @@ var _ = Describe("ANDB", func() {
 					}
 				}
 			})
+			Expect(writes).To(BeNumerically("<", time.Second*20))
+		}, 2)
+
+		Measure("miss reads", func(b Benchmarker) {
+			reads := b.Time("reads", func() {
+				for i := 0; i < 1000; i++ {
+					key := fmt.Sprintf("key-%d", i)
+					getWithError(key)
+
+					if i%100 == 0 {
+						fmt.Printf("got %d values\n", i)
+					}
+				}
+			})
+			Expect(reads).To(BeNumerically("<", time.Second*20))
 		}, 2)
 
 		XMeasure("random, non-overlapping writes", func(b Benchmarker) {
