@@ -56,7 +56,7 @@ var _ = Describe("ANDB", func() {
 			key := fmt.Sprintf("key-%d", i)
 			output, err := getWithError(key)
 			Expect(err).To(HaveOccurred())
-			Expect(output).To(Equal("error: not found"))
+			Expect(output).To(Equal("error: get: not found"))
 		}
 
 		for i := 7; i < 10; i++ {
@@ -90,7 +90,7 @@ var _ = Describe("ANDB", func() {
 			key := fmt.Sprintf("key-%d", i)
 			output, err := getWithError(key)
 			Expect(err).To(HaveOccurred())
-			Expect(output).To(Equal("error: not found"))
+			Expect(output).To(Equal("error: get: not found"))
 		}
 
 		for i := 7; i < 10; i++ {
@@ -112,13 +112,13 @@ var _ = Describe("ANDB", func() {
 		It("returns 'not found' from get", func() {
 			output, err := getWithError("key")
 			Expect(err).To(HaveOccurred())
-			Expect(output).To(Equal("error: not found"))
+			Expect(output).To(Equal("error: get: not found"))
 
 			rebootServer(storeDir)
 
 			output, err = getWithError("key")
 			Expect(err).To(HaveOccurred())
-			Expect(output).To(Equal("error: not found"))
+			Expect(output).To(Equal("error: get: not found"))
 		})
 	})
 
@@ -149,7 +149,7 @@ var _ = Describe("ANDB", func() {
 
 			output, err := getWithError("key-0")
 			Expect(err).To(HaveOccurred())
-			Expect(output).To(ContainSubstring("error: load store: for each block: block handler: incorrect"))
+			Expect(output).To(ContainSubstring("error: get: load store: for each block: block handler: incorrect"))
 		})
 
 		It("gracefully handles a block version being wrong", func() {

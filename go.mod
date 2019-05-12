@@ -8,5 +8,6 @@ require (
 	github.com/onsi/gomega v1.5.0
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.1
+	github.com/tedsuo/ifrit v0.0.0-20180802180643-bea94bb476cc
 	google.golang.org/grpc v1.20.1
 )
