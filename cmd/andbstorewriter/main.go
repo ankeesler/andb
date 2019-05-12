@@ -15,8 +15,8 @@ import (
 )
 
 func main() {
-	if len(os.Args) != 3 {
-		fmt.Printf("usage: %s <storedir> <keycount>\n", os.Args[0])
+	if len(os.Args) != 4 {
+		fmt.Printf("usage: %s <storedir> <keycount> <keyformat>\n", os.Args[0])
 		os.Exit(1)
 	}
 
@@ -26,6 +26,7 @@ func main() {
 		fmt.Printf("error: convert keycount: %s\n", err.Error())
 		os.Exit(1)
 	}
+	keyformat := os.Args[3]
 
 	log.SetOutput(ioutil.Discard)
 
@@ -59,7 +60,7 @@ func main() {
 
 	for i := 0; i < keycount; i++ {
 		if err := f.Set(
-			fmt.Sprintf("key-%d", i),
+			fmt.Sprintf(keyformat, i),
 			fmt.Sprintf("value-%d", i),
 		); err != nil {
 			fmt.Printf("error: set: %s", err.Error())
